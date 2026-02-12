@@ -32,7 +32,12 @@ export default function Layout() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 md:px-8">
           {/* Brand */}
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-slate-800 shadow-sm" />
+            <img
+                src="/logo.png"
+                alt="Maze Robot Logo"
+                className="h-9 w-9 rounded-xl border border-slate-700 bg-slate-900 p-1 object-contain shadow-sm"
+            />
+
             <div>
               <div className="text-sm font-semibold leading-tight text-white">
                 Maze Robot Dashboard

@@ -17,6 +17,7 @@ import Profile from "./pages/Profile.jsx";
 import Logbook from "./pages/Logbook.jsx";
 
 import { AuthProvider } from "./AuthContext.jsx";
+import { ProtectedRoute, PublicOnlyRoute } from "./routes/RouteGuards.jsx";
 
 const router = createBrowserRouter([
   {
@@ -28,10 +29,10 @@ const router = createBrowserRouter([
       { path: "gallery", element: <Gallery /> },
       { path: "status", element: <Status /> },
       { path: "mazes", element: <Mazes /> },
-      { path: "logbook", element: <Logbook /> },
-      { path: "signin", element: <SignIn /> },
-      { path: "signup", element: <SignUp /> },
-      { path: "profile", element: <Profile /> },
+      { path: "logbook", element: <ProtectedRoute><Logbook /></ProtectedRoute> },
+      { path: "signin", element: <PublicOnlyRoute><SignIn /></PublicOnlyRoute> },
+      { path: "signup", element: <PublicOnlyRoute><SignUp /></PublicOnlyRoute> },
+      { path: "profile", element: <ProtectedRoute><Profile /></ProtectedRoute> },
       { path: "teams", element: <Teams /> },
     ],
   },

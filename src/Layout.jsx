@@ -108,7 +108,6 @@ export default function Layout() {
             <NavItem to="/" end label="Dashboard" />
             <NavItem to="/runs" label="Runs" />
             <NavItem to="/mazes" label="Mazes" />
-            <NavItem to="/algorithms" label="Algorithms" />
             <NavItem to="/teams" label="Teams" />
             <NavItem to="/logbook" label="Logbook" />
             <NavItem to="/gallery" label="Gallery" />

@@ -9,7 +9,6 @@ import Runs from "./pages/Runs.jsx";
 import Gallery from "./pages/Gallery.jsx";
 import Status from "./pages/Status.jsx";
 import Mazes from "./pages/Mazes.jsx";
-import Algorithms from "./pages/Algorithms.jsx";
 import Teams from "./pages/Teams.jsx";
 
 import SignIn from "./pages/SignIn.jsx";
@@ -29,7 +28,6 @@ const router = createBrowserRouter([
       { path: "gallery", element: <Gallery /> },
       { path: "status", element: <Status /> },
       { path: "mazes", element: <Mazes /> },
-      { path: "algorithms", element: <Algorithms /> },
       { path: "logbook", element: <Logbook /> },
       { path: "signin", element: <SignIn /> },
       { path: "signup", element: <SignUp /> },

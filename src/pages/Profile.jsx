@@ -1,5 +1,4 @@
 // src/pages/Profile.jsx
-import { Link } from "react-router-dom";
 import { useAuth } from "../AuthContext.jsx";
 
 function Badge({ children, tone = "slate" }) {
@@ -42,41 +41,6 @@ function Card({ title, subtitle, right, children }) {
 export default function Profile() {
   const { user, getCurrentTeam } = useAuth();
   const team = getCurrentTeam();
-
-  // Not signed in
-  if (!user) {
-    return (
-      <section className="px-1 py-2">
-        <div className="mb-5">
-          <h1 className="text-2xl font-bold tracking-tight text-white">Your Profile</h1>
-          <p className="mt-1 text-sm text-slate-400">You are not signed in.</p>
-        </div>
-
-        <Card
-          title="Account required"
-          subtitle="Sign in to view your profile and team details."
-          right={<Badge tone="red">Guest</Badge>}
-        >
-          <div className="text-sm text-slate-300">
-            <Link
-              to="/signin"
-              className="font-semibold text-blue-400 hover:underline"
-            >
-              Sign in
-            </Link>{" "}
-            or{" "}
-            <Link
-              to="/signup"
-              className="font-semibold text-blue-400 hover:underline"
-            >
-              create an account
-            </Link>{" "}
-            to continue.
-          </div>
-        </Card>
-      </section>
-    );
-  }
 
   return (
     <section className="px-1 py-2">

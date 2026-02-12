@@ -1,6 +1,6 @@
 // src/pages/SignIn.jsx
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../AuthContext.jsx";
 
 function Badge({ children, tone = "slate" }) {
@@ -28,6 +28,7 @@ const inputClass =
 export default function SignIn() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [email, setEmail] = useState("team1@demo.com");
   const [password, setPassword] = useState("pass123");
@@ -38,7 +39,8 @@ export default function SignIn() {
     try {
       signIn(email, password);
       setError("");
-      navigate("/profile");
+      const redirectPath = location.state?.from || "/profile";
+      navigate(redirectPath);
     } catch (err) {
       setError(err.message || "Failed to sign in");
     }

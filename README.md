@@ -1,16 +1,82 @@
-# React + Vite
+# Maze Robot Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React + Vite dashboard for tracking maze-solving robot performance, team information, and run records.
 
-Currently, two official plugins are available:
+## What this app includes
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Multi-page dashboard with React Router.
+- Shared app shell (header, nav, content container, footer).
+- Local auth context (demo sign-in + sign-up persistence via `localStorage`).
+- Protected routes for authenticated-only pages.
+- API-backed pages for runs and other robotics data.
 
-## React Compiler
+## Tech stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19
+- Vite 7
+- React Router 7
+- Tailwind CSS 3
 
-## Expanding the ESLint configuration
+## Routes
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Public routes
+
+- `/` → Dashboard
+- `/runs` → Runs list/form (API-backed)
+- `/gallery` → Gallery
+- `/status` → Robot status
+- `/mazes` → Maze list/details
+- `/teams` → Teams
+- `/signin` → Sign in (redirects to profile when already authenticated)
+- `/signup` → Sign up (redirects to profile when already authenticated)
+
+### Protected routes
+
+- `/profile` → Signed-in user profile
+- `/logbook` → Team/user logbook
+
+Unauthenticated access to protected routes redirects to `/signin`.
+
+## Local development
+
+```bash
+npm install
+npm run dev
+```
+
+The app runs at the Vite dev URL shown in terminal (commonly `http://localhost:5173`).
+
+## Build and preview
+
+```bash
+npm run build
+npm run preview
+```
+
+## Linting
+
+```bash
+npm run lint
+```
+
+## Environment / API configuration
+
+The frontend reads API configuration from `src/config.js`.
+
+If you point this app to a deployed backend, update the config values there (or migrate them to Vite env vars when ready).
+
+## Demo auth
+
+A default demo user is available in `src/AuthContext.jsx`:
+
+- Email: `team1@demo.com`
+- Password: `pass123`
+
+User session data is stored in `localStorage` under `mazeUser`.
+
+## Suggested next improvements
+
+- Move API URLs to environment variables (`VITE_*`).
+- Replace demo auth with backend auth (JWT/session).
+- Add route-level tests for auth redirects.
+- Add CI checks for lint + build.

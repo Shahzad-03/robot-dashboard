@@ -43,7 +43,7 @@ export default function Layout() {
                 Maze Robot Dashboard
               </div>
               <div className="text-xs text-slate-400">
-                Runs • Teams • Logbook • Gallery
+                Runs • Teams • Cars • Gallery
               </div>
             </div>
           </div>
@@ -112,9 +112,8 @@ export default function Layout() {
           <nav className="flex flex-wrap items-center gap-2">
             <NavItem to="/" end label="Dashboard" />
             <NavItem to="/runs" label="Runs" />
-            <NavItem to="/mazes" label="Mazes" />
             <NavItem to="/teams" label="Teams" />
-            <NavItem to="/logbook" label="Logbook" />
+            <NavItem to="/cars" label="Cars" />
             <NavItem to="/gallery" label="Gallery" />
             <NavItem to="/status" label="Robot Status" />
           </nav>

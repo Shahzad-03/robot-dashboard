@@ -1,4 +1,3 @@
-// src/pages/Runs.jsx
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "../config";
 
@@ -6,7 +5,6 @@ function Badge({ children, tone = "slate" }) {
   const toneMap = {
     slate: "bg-slate-800/60 text-slate-200 border-slate-700/60",
     green: "bg-emerald-900/40 text-emerald-200 border-emerald-800/50",
-    red: "bg-rose-900/40 text-rose-200 border-rose-800/50",
     blue: "bg-sky-900/40 text-sky-200 border-sky-800/50",
     amber: "bg-amber-900/40 text-amber-200 border-amber-800/50",
   };
@@ -48,48 +46,41 @@ const textareaClass =
 
 export default function Runs() {
   const [runs, setRuns] = useState([]);
-  const [mazes, setMazes] = useState([]);
-  const [algorithms, setAlgorithms] = useState([]);
+  const [cars, setCars] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [submitMsg, setSubmitMsg] = useState("");
   const [error, setError] = useState("");
 
-  // Form state (matches your API contract)
   const [runId, setRunId] = useState("");
-  const [mazeId, setMazeId] = useState("");
-  const [algorithmId, setAlgorithmId] = useState("");
+  const [carId, setCarId] = useState("");
   const [runTime, setRunTime] = useState("");
-  const [pathLength, setPathLength] = useState("");
-  const [goalReached, setGoalReached] = useState(true);
-  const [nodesExplored, setNodesExplored] = useState("");
-  const [teamCode, setTeamCode] = useState("T01");
+  const [dateRecorded, setDateRecorded] = useState(new Date().toISOString().slice(0, 10));
+  const [runLength, setRunLength] = useState("");
+  const [algoType, setAlgoType] = useState("");
   const [notes, setNotes] = useState("");
 
   async function loadAll() {
     setLoading(true);
     setError("");
+
     try {
-      const [runsRes, mazesRes, algRes] = await Promise.all([
+      const [runsRes, carsRes] = await Promise.all([
         fetch(`${API_BASE}/api/runs`),
-        fetch(`${API_BASE}/api/mazes`),
-        fetch(`${API_BASE}/api/algorithms`),
+        fetch(`${API_BASE}/api/cars`),
       ]);
 
       const runsData = await runsRes.json();
-      const mazesData = await mazesRes.json();
-      const algData = await algRes.json();
+      const carsData = await carsRes.json();
 
-      setRuns(Array.isArray(runsData) ? runsData : []);
-      setMazes(Array.isArray(mazesData) ? mazesData : []);
-      setAlgorithms(Array.isArray(algData) ? algData : []);
+      const normalizedRuns = Array.isArray(runsData) ? runsData : [];
+      const normalizedCars = Array.isArray(carsData) ? carsData : [];
 
-      // sensible defaults for dropdowns
-      if (!mazeId && Array.isArray(mazesData) && mazesData.length > 0) {
-        setMazeId(mazesData[0].maze_id);
-      }
-      if (!algorithmId && Array.isArray(algData) && algData.length > 0) {
-        setAlgorithmId(algData[0].algorithm_id);
+      setRuns(normalizedRuns);
+      setCars(normalizedCars);
+
+      if (!carId && normalizedCars.length > 0) {
+        setCarId(normalizedCars[0].car_id);
       }
     } catch (e) {
       setError(String(e));
@@ -105,13 +96,12 @@ export default function Runs() {
 
   const runStats = useMemo(() => {
     const total = runs.length;
-    const success = runs.filter((r) => Number(r.goal_reached) === 1 || r.goal_reached === true).length;
-    const fail = total - success;
-    return { total, success, fail };
+    const totalTime = runs.reduce((sum, r) => sum + Number(r.run_time || 0), 0);
+    const avgTime = total > 0 ? totalTime / total : null;
+    return { total, avgTime };
   }, [runs]);
 
   function makeNextRunId() {
-    // If your run_ids are like R01, R02, R03
     const existingNums = runs
       .map((r) => String(r.run_id || ""))
       .map((id) => {
@@ -129,25 +119,21 @@ export default function Runs() {
     setSubmitMsg("");
     setError("");
 
-    const finalRunId = runId.trim() || makeNextRunId();
-
-    // Basic validation
-    if (!mazeId || !algorithmId || runTime === "") {
-      setError("Please select maze, algorithm, and enter run time.");
+    if (!carId || runTime === "") {
+      setError("Please select a car and enter run time.");
       return;
     }
 
+    const finalRunId = runId.trim() || makeNextRunId();
+
     const payload = {
       run_id: finalRunId,
-      maze_id: mazeId,
-      algorithm_id: algorithmId,
+      car_id: carId,
       run_time: Number(runTime),
-      path_length: pathLength === "" ? 0 : Number(pathLength),
-      goal_reached: goalReached ? 1 : 0,
-      nodes_explored: nodesExplored === "" ? 0 : Number(nodesExplored),
-      date: new Date().toISOString().slice(0, 10), // YYYY-MM-DD
-      team_code: teamCode.trim() || null,
-      notes: notes.trim() || null,
+      date_recorded: dateRecorded ? dateRecorded : undefined,
+      run_length: runLength === "" ? undefined : Number(runLength),
+      algo_type: algoType.trim() || undefined,
+      notes: notes.trim() || undefined,
     };
 
     try {
@@ -167,11 +153,10 @@ export default function Runs() {
       setSubmitMsg(`✅ Run ${finalRunId} added to database.`);
       setRunId("");
       setRunTime("");
-      setPathLength("");
-      setNodesExplored("");
+      setRunLength("");
+      setAlgoType("");
       setNotes("");
 
-      // refresh table
       await loadAll();
     } catch (e) {
       setError(String(e));
@@ -180,23 +165,22 @@ export default function Runs() {
 
   return (
     <section className="px-1 py-2">
-      {/* Header */}
       <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Runs</h1>
           <p className="mt-1 text-sm text-slate-400">
-            Runs are loaded from the database. You can insert a new run here (simulating robot upload).
+            Submit and review runs using ERD fields only.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <Badge tone="slate">Total: {runStats.total}</Badge>
-          <Badge tone="green">Goal reached: {runStats.success}</Badge>
-          <Badge tone="red">Failed: {runStats.fail}</Badge>
+          <Badge tone="amber">
+            Avg time: {runStats.avgTime == null ? "—" : `${runStats.avgTime.toFixed(2)}s`}
+          </Badge>
         </div>
       </div>
 
-      {/* Alerts */}
       {error && (
         <div className="mb-4 rounded-xl border border-rose-800/50 bg-rose-950/40 p-4 text-sm text-rose-100">
           <div className="font-semibold">Error</div>
@@ -210,17 +194,13 @@ export default function Runs() {
         </div>
       )}
 
-      {/* New Run Form */}
       <div className="mb-6 overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-950/30 shadow-sm">
         <div className="flex items-center justify-between gap-3 border-b border-slate-800/60 px-4 py-3 md:px-6">
           <div>
             <div className="text-sm font-semibold text-white">+ New Run</div>
-            <div className="text-xs text-slate-400">
-              Submit a run record via POST to the database.
-            </div>
+            <div className="text-xs text-slate-400">Submit a run record via POST /api/runs.</div>
           </div>
-
-          <Badge tone="blue">POST /api/runs</Badge>
+          <Badge tone="blue">ERD payload</Badge>
         </div>
 
         <form onSubmit={handleSubmit} className="px-4 py-4 md:px-6">
@@ -228,40 +208,18 @@ export default function Runs() {
             <Field label="Run ID (optional)" hint="Auto-generates R02, R03…">
               <input
                 className={inputClass}
-                placeholder="Leave blank for auto (R02, R03...)"
+                placeholder="Leave blank for auto"
                 value={runId}
                 onChange={(e) => setRunId(e.target.value)}
               />
             </Field>
 
-            <Field label="Team Code" hint="e.g. T01">
-              <input
-                className={inputClass}
-                placeholder="e.g. T01"
-                value={teamCode}
-                onChange={(e) => setTeamCode(e.target.value)}
-              />
-            </Field>
-
-            <Field label="Maze">
-              <select className={selectClass} value={mazeId} onChange={(e) => setMazeId(e.target.value)}>
-                {mazes.map((m) => (
-                  <option key={m.maze_id} value={m.maze_id}>
-                    {m.maze_id} • {m.goal_type} • {m.no_of_tiles} tiles
-                  </option>
-                ))}
-              </select>
-            </Field>
-
-            <Field label="Algorithm">
-              <select
-                className={selectClass}
-                value={algorithmId}
-                onChange={(e) => setAlgorithmId(e.target.value)}
-              >
-                {algorithms.map((a) => (
-                  <option key={a.algorithm_id} value={a.algorithm_id}>
-                    {a.algorithm_id} • {a.type}
+            <Field label="Car *" hint="Required">
+              <select className={selectClass} required value={carId} onChange={(e) => setCarId(e.target.value)}>
+                <option value="" disabled>Select a car</option>
+                {cars.map((c) => (
+                  <option key={c.car_id} value={c.car_id}>
+                    {c.car_id} • {c.car_name} • {c.team_name}
                   </option>
                 ))}
               </select>
@@ -278,39 +236,32 @@ export default function Runs() {
               />
             </Field>
 
-            <Field label="Path length (steps)">
+            <Field label="Date recorded">
               <input
                 className={inputClass}
-                type="number"
-                value={pathLength}
-                onChange={(e) => setPathLength(e.target.value)}
+                type="date"
+                value={dateRecorded}
+                onChange={(e) => setDateRecorded(e.target.value)}
               />
             </Field>
 
-            <Field label="Nodes explored">
+            <Field label="Run length">
               <input
                 className={inputClass}
                 type="number"
-                value={nodesExplored}
-                onChange={(e) => setNodesExplored(e.target.value)}
+                value={runLength}
+                onChange={(e) => setRunLength(e.target.value)}
               />
             </Field>
 
-            <div className="flex items-center gap-3 rounded-xl border border-slate-800/60 bg-slate-950/30 px-3 py-3">
+            <Field label="Algorithm type">
               <input
-                id="goalReached"
-                type="checkbox"
-                checked={goalReached}
-                onChange={(e) => setGoalReached(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-600 bg-slate-950 text-slate-200"
+                className={inputClass}
+                placeholder="e.g. DFS"
+                value={algoType}
+                onChange={(e) => setAlgoType(e.target.value)}
               />
-              <label htmlFor="goalReached" className="text-sm font-medium text-slate-200">
-                Goal reached
-              </label>
-              <div className="ml-auto">
-                {goalReached ? <Badge tone="green">Yes</Badge> : <Badge tone="red">No</Badge>}
-              </div>
-            </div>
+            </Field>
           </div>
 
           <div className="mt-4">
@@ -325,29 +276,22 @@ export default function Runs() {
             </Field>
           </div>
 
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-xs text-slate-500">
-              Tip: leave Run ID blank to auto-generate.
-            </div>
-
+          <div className="mt-4 flex justify-end">
             <button
               type="submit"
               className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-500"
             >
-              Submit Run (POST to DB)
+              Submit Run
             </button>
           </div>
         </form>
       </div>
 
-      {/* Runs Table */}
       <div className="overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-950/30 shadow-sm">
         <div className="flex items-center justify-between gap-3 border-b border-slate-800/60 px-4 py-3 md:px-6">
           <div>
             <div className="text-sm font-semibold text-white">All Runs</div>
-            <div className="text-xs text-slate-400">
-              Latest runs first. Loaded from the database.
-            </div>
+            <div className="text-xs text-slate-400">Joined run + car + team + members data.</div>
           </div>
           <Badge tone="slate">{loading ? "Loading…" : `${runs.length} rows`}</Badge>
         </div>
@@ -356,86 +300,64 @@ export default function Runs() {
           <div className="px-4 py-6 text-sm text-slate-400 md:px-6">Loading runs…</div>
         ) : (
           <div className="w-full overflow-x-auto">
-            <table className="min-w-[1000px] w-full text-left text-sm">
+            <table className="min-w-[1100px] w-full text-left text-sm">
               <thead className="bg-slate-900/40 text-xs uppercase tracking-wide text-slate-400">
                 <tr>
                   <th className="px-4 py-3 md:px-6">Run</th>
-                  <th className="px-4 py-3 md:px-6">Maze</th>
-                  <th className="px-4 py-3 md:px-6">Algorithm</th>
-                  <th className="px-4 py-3 md:px-6">Time</th>
-                  <th className="px-4 py-3 md:px-6">Path</th>
-                  <th className="px-4 py-3 md:px-6">Goal</th>
-                  <th className="px-4 py-3 md:px-6">Nodes</th>
+                  <th className="px-4 py-3 md:px-6">Car</th>
                   <th className="px-4 py-3 md:px-6">Team</th>
+                  <th className="px-4 py-3 md:px-6">Run Time</th>
+                  <th className="px-4 py-3 md:px-6">Run Length</th>
+                  <th className="px-4 py-3 md:px-6">Algo Type</th>
                   <th className="px-4 py-3 md:px-6">Contact</th>
+                  <th className="px-4 py-3 md:px-6">Notes</th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-slate-800/60">
-                {runs.map((r) => {
-                  const goalYes = Number(r.goal_reached) === 1 || r.goal_reached === true;
-                  return (
-                    <tr
-                      key={r.run_id}
-                      className="hover:bg-slate-900/30 transition"
-                    >
-                      <td className="px-4 py-3 md:px-6">
-                        <div className="font-semibold text-white">{r.run_id}</div>
-                        <div className="text-xs text-slate-500">
-                          {r.date ? new Date(r.date).toLocaleDateString() : ""}
-                        </div>
-                      </td>
+                {runs.map((r) => (
+                  <tr key={r.run_id} className="transition hover:bg-slate-900/30">
+                    <td className="px-4 py-3 md:px-6">
+                      <div className="font-semibold text-white">{r.run_id}</div>
+                      <div className="text-xs text-slate-500">
+                        {r.date_recorded ? new Date(r.date_recorded).toLocaleDateString() : "—"}
+                      </div>
+                    </td>
 
-                      <td className="px-4 py-3 md:px-6 text-slate-200">
-                        <div className="font-medium">
-                          {r.maze_id}{" "}
-                          <span className="text-slate-500">•</span>{" "}
-                          {r.goal_type}
-                        </div>
-                        <div className="text-xs text-slate-500">{r.no_of_tiles} tiles</div>
-                      </td>
+                    <td className="px-4 py-3 md:px-6 text-slate-200">
+                      <div className="font-medium">{r.car_name || r.car_id}</div>
+                      <div className="text-xs text-slate-500">{r.car_id} • {r.car_type || "—"}</div>
+                    </td>
 
-                      <td className="px-4 py-3 md:px-6 text-slate-200">
-                        <Badge tone="amber">{r.algorithm_type}</Badge>
-                      </td>
+                    <td className="px-4 py-3 md:px-6 text-slate-200">
+                      <div className="font-medium">{r.team_name || r.team_id || "—"}</div>
+                      <div className="text-xs text-slate-500">{r.team_id || "—"}</div>
+                    </td>
 
-                      <td className="px-4 py-3 md:px-6 text-slate-200">
-                        <span className="font-medium">{r.run_time}</span>
-                        <span className="text-slate-500">s</span>
-                      </td>
+                    <td className="px-4 py-3 md:px-6 text-slate-200">{r.run_time}</td>
+                    <td className="px-4 py-3 md:px-6 text-slate-200">{r.run_length ?? "—"}</td>
+                    <td className="px-4 py-3 md:px-6 text-slate-200">{r.algo_type || "—"}</td>
 
-                      <td className="px-4 py-3 md:px-6 text-slate-200">{r.path_length}</td>
+                    <td className="px-4 py-3 md:px-6">
+                      {r.email_contact ? (
+                        <a
+                          className="text-slate-200 underline decoration-slate-600 underline-offset-4 hover:text-white"
+                          href={`mailto:${r.email_contact}`}
+                        >
+                          {r.email_contact}
+                        </a>
+                      ) : (
+                        <span className="text-slate-500">—</span>
+                      )}
+                    </td>
 
-                      <td className="px-4 py-3 md:px-6">
-                        {goalYes ? <Badge tone="green">Yes</Badge> : <Badge tone="red">No</Badge>}
-                      </td>
-
-                      <td className="px-4 py-3 md:px-6 text-slate-200">{r.nodes_explored}</td>
-
-                      <td className="px-4 py-3 md:px-6 text-slate-200">
-                        <div className="font-medium">{r.team_code || "—"}</div>
-                        <div className="text-xs text-slate-500">{r.team_name || ""}</div>
-                      </td>
-
-                      <td className="px-4 py-3 md:px-6">
-                        {r.contact_email ? (
-                          <a
-                            className="text-slate-200 underline decoration-slate-600 underline-offset-4 hover:text-white"
-                            href={`mailto:${r.contact_email}`}
-                          >
-                            {r.contact_email}
-                          </a>
-                        ) : (
-                          <span className="text-slate-500">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
+                    <td className="max-w-[240px] px-4 py-3 text-slate-300 md:px-6">{r.notes || "—"}</td>
+                  </tr>
+                ))}
 
                 {runs.length === 0 && (
                   <tr>
-                    <td className="px-4 py-6 text-slate-500 md:px-6" colSpan={9}>
+                    <td className="px-4 py-6 text-slate-500 md:px-6" colSpan={8}>
                       No runs found in database.
                     </td>
                   </tr>

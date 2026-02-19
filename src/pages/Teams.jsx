@@ -1,4 +1,3 @@
-// src/pages/Teams.jsx
 import { useEffect, useState } from "react";
 import { API_BASE } from "../config";
 
@@ -8,15 +7,9 @@ function Badge({ children, tone = "slate" }) {
     blue: "bg-sky-900/40 text-sky-200 border-sky-800/50",
     amber: "bg-amber-900/40 text-amber-200 border-amber-800/50",
     green: "bg-emerald-900/40 text-emerald-200 border-emerald-800/50",
-    red: "bg-rose-900/40 text-rose-200 border-rose-800/50",
   };
   return (
-    <span
-      className={[
-        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium",
-        toneMap[tone] || toneMap.slate,
-      ].join(" ")}
-    >
+    <span className={["inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium", toneMap[tone] || toneMap.slate].join(" ")}>
       {children}
     </span>
   );
@@ -58,21 +51,15 @@ export default function Teams() {
 
   return (
     <section className="px-1 py-2">
-      {/* Header */}
       <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Teams</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            All teams and members loaded from the database.
-          </p>
+          <p className="mt-1 text-sm text-slate-400">TEAM + MEMBERS + CAR overview from /api/teams.</p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Badge tone="slate">{loading ? "Loading…" : `${teams.length} teams`}</Badge>
-        </div>
+        <Badge tone="slate">{loading ? "Loading…" : `${teams.length} teams`}</Badge>
       </div>
 
-      {/* Error */}
       {error && (
         <div className="mb-4 rounded-xl border border-rose-800/50 bg-rose-950/40 p-4 text-sm text-rose-100">
           <div className="font-semibold">Error</div>
@@ -80,7 +67,6 @@ export default function Teams() {
         </div>
       )}
 
-      {/* Loading */}
       {loading ? (
         <Card title="Loading teams" subtitle="Fetching from database…" right={<Badge tone="slate">GET /api/teams</Badge>}>
           <div className="text-sm text-slate-400">Loading teams…</div>
@@ -91,88 +77,71 @@ export default function Teams() {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {teams.map((t) => (
-            <Card
-              key={t.team_id}
-              title={`${t.team_code} • ${t.team_name}`}
-              subtitle="Team record from database"
-              right={
-                <div className="flex items-center gap-2">
-                  <Badge tone="blue">{t.team_code}</Badge>
-                  <Badge tone="slate">
-                    {(t.members && t.members.length) ? `${t.members.length} members` : "0 members"}
-                  </Badge>
-                </div>
-              }
-            >
-              <div className="grid gap-4 md:grid-cols-3">
-                {/* Team details */}
-                <div className="md:col-span-1">
+          {teams.map((team) => {
+            const members = team.members || null;
+            const people = [
+              members?.team_leader,
+              members?.member1,
+              members?.member2,
+              members?.member3,
+              members?.member4,
+            ].filter((p) => Boolean(p && String(p).trim()));
+
+            return (
+              <Card
+                key={team.team_id}
+                title={`${team.team_id} • ${team.team_name}`}
+                subtitle="Team record"
+                right={<Badge tone="blue">Leader: {team.team_leader || "—"}</Badge>}
+              >
+                <div className="grid gap-4 md:grid-cols-3">
                   <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="text-slate-400">Leader:</span>{" "}
-                      <span className="font-semibold text-slate-100">{t.team_leader || "—"}</span>
+                    <div><span className="text-slate-400">Team ID:</span> <span className="font-semibold text-slate-100">{team.team_id}</span></div>
+                    <div><span className="text-slate-400">Team Name:</span> <span className="font-semibold text-slate-100">{team.team_name}</span></div>
+                    <div><span className="text-slate-400">Team Leader:</span> <span className="font-semibold text-slate-100">{team.team_leader || "—"}</span></div>
+                  </div>
+
+                  <div>
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <div className="text-xs font-medium text-slate-400">Members</div>
+                      <Badge tone="slate">{people.length}</Badge>
                     </div>
 
-                    <div>
-                      <span className="text-slate-400">Contact:</span>{" "}
-                      {t.contact_email ? (
-                        <a
-                          className="font-semibold text-blue-400 hover:underline"
-                          href={`mailto:${t.contact_email}`}
-                        >
-                          {t.contact_email}
-                        </a>
+                    <div className="space-y-2">
+                      {people.length > 0 ? people.map((person) => (
+                        <div key={`${team.team_id}-${person}`} className="rounded-xl border border-slate-800/60 bg-slate-900/20 px-3 py-2 text-sm text-white">{person}</div>
+                      )) : <div className="text-sm text-slate-500">No members listed.</div>}
+                    </div>
+
+                    <div className="mt-3 space-y-1 text-xs">
+                      <div className="text-slate-300">Email: {members?.email_contact || "—"}</div>
+                      <div className="text-slate-300">Phone: {members?.mobile_contact || "—"}</div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <div className="text-xs font-medium text-slate-400">Cars</div>
+                      <Badge tone="green">{Array.isArray(team.cars) ? team.cars.length : 0}</Badge>
+                    </div>
+
+                    <div className="space-y-2">
+                      {Array.isArray(team.cars) && team.cars.length > 0 ? (
+                        team.cars.map((car) => (
+                          <div key={car.car_id} className="rounded-xl border border-slate-800/60 bg-slate-900/20 px-3 py-2 text-sm">
+                            <div className="font-semibold text-white">{car.car_id} • {car.car_name}</div>
+                            <div className="text-slate-400">{car.car_type || "—"}</div>
+                          </div>
+                        ))
                       ) : (
-                        <span className="text-slate-500">—</span>
+                        <div className="text-sm text-slate-500">No cars listed.</div>
                       )}
                     </div>
                   </div>
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {t.team_leader ? <Badge tone="amber">Leader set</Badge> : <Badge tone="slate">No leader</Badge>}
-                    {t.contact_email ? <Badge tone="green">Contact set</Badge> : <Badge tone="slate">No contact</Badge>}
-                  </div>
                 </div>
-
-                {/* Members */}
-                <div className="md:col-span-2">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="text-xs font-medium text-slate-400">Members</div>
-                    <Badge tone="slate">{(t.members && t.members.length) ? t.members.length : 0}</Badge>
-                  </div>
-
-                  <div className="mt-3 grid gap-2">
-                    {t.members && t.members.length > 0 ? (
-                      t.members.map((m) => (
-                        <div
-                          key={m.member_id}
-                          className="flex flex-col gap-1 rounded-xl border border-slate-800/60 bg-slate-900/20 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
-                        >
-                          <div className="min-w-0">
-                            <div className="truncate text-sm font-semibold text-white">
-                              {m.full_name}
-                            </div>
-                            <div className="truncate text-xs text-slate-500">
-                              {m.email || "No email"}
-                            </div>
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-2">
-                            {m.role ? <Badge tone="amber">{m.role}</Badge> : <Badge tone="slate">member</Badge>}
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="rounded-xl border border-slate-800/60 bg-slate-900/20 px-3 py-3 text-sm text-slate-400">
-                        No members listed.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       )}
     </section>

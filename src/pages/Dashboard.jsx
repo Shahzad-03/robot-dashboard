@@ -1,6 +1,69 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { API_BASE } from "../config";
 import { useAuth } from "../AuthContext.jsx";
+
+function buildStats(runs) {
+  const totalRuns = runs.length;
+  let totalTime = 0;
+
+  // Simple object instead of Map to keep this beginner friendly.
+  const algoTotals = {};
+
+  for (const run of runs) {
+    const runTime = Number(run.run_time || 0);
+    totalTime += runTime;
+
+    const algoName = (run.algo_type || "Unknown").trim() || "Unknown";
+    if (!algoTotals[algoName]) {
+      algoTotals[algoName] = { count: 0, time: 0 };
+    }
+
+    algoTotals[algoName].count += 1;
+    algoTotals[algoName].time += runTime;
+  }
+
+  const avgRunTime = totalRuns > 0 ? totalTime / totalRuns : null;
+
+  let bestAlgoType = null;
+  let bestAlgoAvg = Infinity;
+  for (const algoName of Object.keys(algoTotals)) {
+    const algoData = algoTotals[algoName];
+    const algoAvg = algoData.time / algoData.count;
+    if (algoAvg < bestAlgoAvg) {
+      bestAlgoAvg = algoAvg;
+      bestAlgoType = algoName;
+    }
+  }
+
+  return { totalRuns, avgRunTime, bestAlgoType };
+}
+
+function findUserTeam(user, teams) {
+  if (!user || !user.teamId) {
+    return null;
+  }
+
+  const wantedTeamId = String(user.teamId).trim().toUpperCase();
+
+  for (const team of teams) {
+    const currentTeamId = String(team.team_id || "").toUpperCase();
+    if (currentTeamId === wantedTeamId) {
+      return team;
+    }
+  }
+
+  return null;
+}
+
+function getMemberNames(team) {
+  if (!team || !team.members) {
+    return [];
+  }
+
+  const m = team.members;
+  const allNames = [m.team_leader, m.member1, m.member2, m.member3, m.member4];
+  return allNames.filter((name) => name && String(name).trim());
+}
 
 function Badge({ children, tone = "slate" }) {
   const toneMap = {
@@ -64,47 +127,10 @@ export default function Dashboard() {
     loadData();
   }, []);
 
-  const stats = useMemo(() => {
-    const totalRuns = runs.length;
-    const avgRunTime =
-      totalRuns > 0
-        ? runs.reduce((sum, r) => sum + Number(r.run_time || 0), 0) / totalRuns
-        : null;
-
-    const algoBuckets = new Map();
-    for (const run of runs) {
-      const algo = (run.algo_type || "Unknown").trim() || "Unknown";
-      const list = algoBuckets.get(algo) || [];
-      list.push(Number(run.run_time || 0));
-      algoBuckets.set(algo, list);
-    }
-
-    let bestAlgoType = null;
-    let bestAlgoAvg = Infinity;
-    for (const [algo, times] of algoBuckets.entries()) {
-      const avg = times.reduce((a, b) => a + b, 0) / times.length;
-      if (avg < bestAlgoAvg) {
-        bestAlgoAvg = avg;
-        bestAlgoType = algo;
-      }
-    }
-
-    return { totalRuns, avgRunTime, bestAlgoType };
-  }, [runs]);
-
-  const userTeam = useMemo(() => {
-    const wantedTeamId = (user?.teamId || "").trim().toUpperCase();
-    if (!wantedTeamId) return null;
-    return teams.find((t) => String(t.team_id || "").toUpperCase() === wantedTeamId) || null;
-  }, [user?.teamId, teams]);
-
-  const memberNames = useMemo(() => {
-    if (!userTeam?.members) return [];
-    const m = userTeam.members;
-    return [m.team_leader, m.member1, m.member2, m.member3, m.member4].filter(
-      (name) => Boolean(name && String(name).trim())
-    );
-  }, [userTeam]);
+  // Keeping values as normal variables so it is easier to read during classes.
+  const stats = buildStats(runs);
+  const userTeam = findUserTeam(user, teams);
+  const memberNames = getMemberNames(userTeam);
 
   return (
     <section className="px-1 py-2">

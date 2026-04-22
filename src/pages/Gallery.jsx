@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+const GALLERY_STORAGE_KEY = "mazeGalleryItems";
 
 function Badge({ children, tone = "slate" }) {
   const toneMap = {
@@ -29,41 +31,69 @@ const textareaClass =
   "placeholder:text-slate-500 shadow-sm outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-700/40";
 
 export default function Gallery() {
-  // Local-only gallery (for now). Later you can connect to DB/API.
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState(() => {
+    try {
+      const stored = localStorage.getItem(GALLERY_STORAGE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
   const [filter, setFilter] = useState("all"); // all | robot | maze | run
   const [error, setError] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   const filtered = useMemo(() => {
     if (filter === "all") return items;
     return items.filter((x) => x.tag === filter);
   }, [items, filter]);
 
-  function onFilesSelected(e) {
+  useEffect(() => {
+    localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(items));
+  }, [items]);
+
+  function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error(`Could not read ${file.name}.`));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function onFilesSelected(e) {
     setError("");
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
+    setUploading(true);
     const next = [];
 
-    for (const file of files) {
-      if (!file.type.startsWith("image/")) {
-        setError("Only image files are allowed (PNG/JPG/WebP).");
-        continue;
-      }
-      const url = URL.createObjectURL(file);
-      next.push({
-        id: crypto.randomUUID(),
-        url,
-        name: file.name,
-        tag: "robot", // default
-        note: "",
-        createdAt: new Date().toISOString(),
-      });
-    }
+    try {
+      for (const file of files) {
+        if (!file.type.startsWith("image/")) {
+          setError("Only image files are allowed (PNG/JPG/WebP).");
+          continue;
+        }
 
-    setItems((prev) => [...next, ...prev]);
-    e.target.value = "";
+        const dataUrl = await readFileAsDataUrl(file);
+        next.push({
+          id: crypto.randomUUID(),
+          url: dataUrl,
+          name: file.name,
+          tag: "robot",
+          note: "",
+          createdAt: new Date().toISOString(),
+        });
+      }
+
+      setItems((prev) => [...next, ...prev]);
+    } catch (uploadError) {
+      setError(uploadError.message || "Could not upload image.");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
   }
 
   function updateItem(id, patch) {
@@ -82,7 +112,7 @@ export default function Gallery() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Gallery</h1>
           <p className="mt-1 text-sm text-slate-400">
-            Upload photos of the physical robot, maze setup, and test runs (local preview for now).
+            Upload photos of the physical robot, maze setup, and test runs. Saved in this browser for the demo.
           </p>
         </div>
 
@@ -95,7 +125,7 @@ export default function Gallery() {
               className="hidden"
               onChange={onFilesSelected}
             />
-            Upload images
+            {uploading ? "Saving..." : "Upload images"}
           </label>
 
           <select
@@ -125,7 +155,7 @@ export default function Gallery() {
           <div className="text-lg font-semibold text-white">No images yet</div>
           <p className="mt-2 text-sm text-slate-400">
             Upload photos of your robot and maze so the website shows the physical build.
-            This is ideal evidence for assessment and demos.
+            This is ideal evidence for assessment and demos, and saved on this browser.
           </p>
 
           <div className="mt-5 grid gap-3 md:grid-cols-3">

@@ -149,7 +149,7 @@ export default function Dashboard() {
       <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Dashboard</h1>
-          <p className="mt-1 text-sm text-slate-400">ERD-aligned overview from runs and teams.</p>
+          <p className="mt-1 text-sm text-slate-400">ERD-aligned dashboard overview from runs and teams.</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

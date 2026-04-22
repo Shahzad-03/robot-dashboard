@@ -1,4 +1,6 @@
 // src/pages/Status.jsx
+import { useState } from "react";
+
 function Card({ title, children, right }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-950/30 shadow-sm">
@@ -31,9 +33,10 @@ function StatusRow({ label, value, tone = "slate" }) {
 }
 
 export default function Status() {
-  // Static placeholders for now (future: live robot/MQTT/WebSocket data)
-  const connected = false;
-  const battery = 82;
+  const [connected, setConnected] = useState(false);
+  const [battery, setBattery] = useState(82);
+  const [leftMotor, setLeftMotor] = useState("OK");
+  const [rightMotor, setRightMotor] = useState("OK");
 
   return (
     <section className="px-1 py-2">
@@ -43,8 +46,67 @@ export default function Status() {
           Robot Status
         </h1>
         <p className="mt-1 text-sm text-slate-400">
-          Live robot telemetry (currently simulated / placeholder data).
+          Demo robot telemetry for now. This can later be replaced with real Raspberry Pi data.
         </p>
+      </div>
+
+      <div className="mb-6 rounded-2xl border border-slate-800/60 bg-slate-950/30 p-4 shadow-sm">
+        <div className="mb-3 text-sm font-semibold text-white">Demo Controls</div>
+        <p className="mb-4 text-sm text-slate-400">
+          These controls are only for showing how the status area could work before live robot data is connected.
+        </p>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <label className="block">
+            <span className="text-xs font-medium text-slate-200">Connection</span>
+            <select
+              className="mt-1 w-full rounded-lg border border-slate-700/70 bg-slate-950/50 px-3 py-2 text-sm text-slate-100 outline-none focus:border-slate-500"
+              value={connected ? "connected" : "disconnected"}
+              onChange={(e) => setConnected(e.target.value === "connected")}
+            >
+              <option value="disconnected">Disconnected</option>
+              <option value="connected">Connected</option>
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="text-xs font-medium text-slate-200">Battery %</span>
+            <input
+              className="mt-1 w-full rounded-lg border border-slate-700/70 bg-slate-950/50 px-3 py-2 text-sm text-slate-100 outline-none focus:border-slate-500"
+              type="number"
+              min="0"
+              max="100"
+              value={battery}
+              onChange={(e) => setBattery(Number(e.target.value || 0))}
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-xs font-medium text-slate-200">Left Motor</span>
+            <select
+              className="mt-1 w-full rounded-lg border border-slate-700/70 bg-slate-950/50 px-3 py-2 text-sm text-slate-100 outline-none focus:border-slate-500"
+              value={leftMotor}
+              onChange={(e) => setLeftMotor(e.target.value)}
+            >
+              <option value="OK">OK</option>
+              <option value="Warning">Warning</option>
+              <option value="Offline">Offline</option>
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="text-xs font-medium text-slate-200">Right Motor</span>
+            <select
+              className="mt-1 w-full rounded-lg border border-slate-700/70 bg-slate-950/50 px-3 py-2 text-sm text-slate-100 outline-none focus:border-slate-500"
+              value={rightMotor}
+              onChange={(e) => setRightMotor(e.target.value)}
+            >
+              <option value="OK">OK</option>
+              <option value="Warning">Warning</option>
+              <option value="Offline">Offline</option>
+            </select>
+          </label>
+        </div>
       </div>
 
       {/* Status cards */}
@@ -91,8 +153,16 @@ export default function Status() {
 
         <Card title="Motors">
           <div className="space-y-2">
-            <StatusRow label="Left motor" value="OK" tone="green" />
-            <StatusRow label="Right motor" value="OK" tone="green" />
+            <StatusRow
+              label="Left motor"
+              value={leftMotor}
+              tone={leftMotor === "OK" ? "green" : leftMotor === "Warning" ? "amber" : "red"}
+            />
+            <StatusRow
+              label="Right motor"
+              value={rightMotor}
+              tone={rightMotor === "OK" ? "green" : rightMotor === "Warning" ? "amber" : "red"}
+            />
           </div>
         </Card>
       </div>

@@ -34,11 +34,29 @@ export default function SignUp() {
   const [teamId, setTeamId] = useState("T01");
   const [carModel, setCarModel] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
 
   function handleSubmit(e) {
     e.preventDefault();
-    signUp(name, email, password, teamId, carModel);
-    navigate("/profile");
+    setError("");
+
+    if (password.length < 6) {
+      setError("Please use a password with at least 6 characters.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    try {
+      signUp(name, email, password, teamId, carModel);
+      navigate("/profile");
+    } catch (signUpError) {
+      setError(signUpError.message || "Could not create account.");
+    }
   }
 
   return (
@@ -48,7 +66,7 @@ export default function SignUp() {
         <div className="mb-5 text-center">
           <h1 className="text-2xl font-bold tracking-tight text-white">Sign Up</h1>
           <p className="mt-1 text-sm text-slate-400">
-            Create an account and link it to your team and car model.
+            Create a browser-saved account and link it to your team and car model.
           </p>
         </div>
 
@@ -125,6 +143,28 @@ export default function SignUp() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </label>
+
+            <label className="block">
+              <span className="text-xs font-medium text-slate-200">Confirm Password</span>
+              <input
+                className={inputClass + " mt-1"}
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            </label>
+
+            {error && (
+              <div className="rounded-lg border border-rose-800/50 bg-rose-950/40 px-3 py-2 text-sm text-rose-100">
+                {error}
+              </div>
+            )}
+
+            <div className="rounded-lg border border-slate-800/60 bg-slate-900/20 px-3 py-2 text-xs text-slate-400">
+              This account is stored in your browser for this project demo, so other team members
+              would need their own sign-up on the same browser or a real backend auth system later.
+            </div>
 
             <button
               type="submit"

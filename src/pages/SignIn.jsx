@@ -55,7 +55,7 @@ export default function SignIn() {
             Sign In
           </h1>
           <p className="mt-1 text-sm text-slate-400">
-            Use the demo account or your future database account.
+            Use the demo account or a browser-saved account created on this device.
           </p>
         </div>
 
@@ -96,6 +96,11 @@ export default function SignIn() {
                 {error}
               </div>
             )}
+
+            <div className="rounded-lg border border-slate-800/60 bg-slate-900/20 px-3 py-2 text-xs text-slate-400">
+              Demo login: <span className="font-semibold text-slate-200">team1@demo.com</span> /{" "}
+              <span className="font-semibold text-slate-200">pass123</span>
+            </div>
 
             <button
               type="submit"

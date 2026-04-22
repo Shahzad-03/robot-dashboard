@@ -124,6 +124,16 @@ export default function Runs() {
       return;
     }
 
+    if (Number(runTime) <= 0) {
+      setError("Run time must be more than 0 seconds.");
+      return;
+    }
+
+    if (runLength !== "" && Number(runLength) < 0) {
+      setError("Run length cannot be negative.");
+      return;
+    }
+
     const finalRunId = runId.trim() || makeNextRunId();
 
     const payload = {

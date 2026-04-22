@@ -97,7 +97,7 @@ function Card({ title, subtitle, right, children }) {
 }
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, getTeamProfile } = useAuth();
 
   const [runs, setRuns] = useState([]);
   const [teams, setTeams] = useState([]);
@@ -130,7 +130,19 @@ export default function Dashboard() {
   // Keeping values as normal variables so it is easier to read during classes.
   const stats = buildStats(runs);
   const userTeam = findUserTeam(user, teams);
-  const memberNames = getMemberNames(userTeam);
+  const savedTeamProfile = getTeamProfile(user?.teamId);
+  const memberNames = userTeam ? getMemberNames(userTeam) : [];
+  const fallbackMemberNames = [
+    savedTeamProfile?.teamLeader,
+    savedTeamProfile?.member1,
+    savedTeamProfile?.member2,
+    savedTeamProfile?.member3,
+    savedTeamProfile?.member4,
+  ].filter((name) => name && String(name).trim());
+  const shownMemberNames = memberNames.length > 0 ? memberNames : fallbackMemberNames;
+  const shownLeader = userTeam?.team_leader || savedTeamProfile?.teamLeader || "—";
+  const shownEmail = userTeam?.members?.email_contact || savedTeamProfile?.emailContact || "";
+  const shownPhone = userTeam?.members?.mobile_contact || savedTeamProfile?.mobileContact || "";
 
   return (
     <section className="px-1 py-2">
@@ -162,36 +174,38 @@ export default function Dashboard() {
         >
           {!user && <div className="text-sm text-slate-400">Sign in to view team details.</div>}
 
-          {user && !userTeam && (
+          {user && !userTeam && !savedTeamProfile && (
             <div className="text-sm text-slate-400">
               No team found for <span className="font-semibold text-slate-200">{user.teamId || "(empty)"}</span>. Ensure your profile teamId matches TEAM.team_id.
             </div>
           )}
 
-          {user && userTeam && (
+          {user && (userTeam || savedTeamProfile) && (
             <div className="grid gap-4 md:grid-cols-3">
               <div>
                 <div className="text-xs font-medium text-slate-400">Team</div>
-                <div className="mt-1 text-base font-semibold text-white">{userTeam.team_id} • {userTeam.team_name}</div>
-                <div className="mt-1 text-sm text-slate-400">Leader: {userTeam.team_leader || "—"}</div>
+                <div className="mt-1 text-base font-semibold text-white">
+                  {userTeam ? `${userTeam.team_id} • ${userTeam.team_name}` : `${user?.teamId || "—"} • Saved Team`}
+                </div>
+                <div className="mt-1 text-sm text-slate-400">Leader: {shownLeader}</div>
               </div>
 
               <div>
                 <div className="text-xs font-medium text-slate-400">Contact</div>
                 <div className="mt-1 text-sm text-slate-200">
-                  {userTeam.members?.email_contact ? (
-                    <a className="underline decoration-slate-600 underline-offset-4 hover:text-white" href={`mailto:${userTeam.members.email_contact}`}>
-                      {userTeam.members.email_contact}
+                  {shownEmail ? (
+                    <a className="underline decoration-slate-600 underline-offset-4 hover:text-white" href={`mailto:${shownEmail}`}>
+                      {shownEmail}
                     </a>
                   ) : "—"}
                 </div>
-                <div className="mt-1 text-sm text-slate-300">{userTeam.members?.mobile_contact || "—"}</div>
+                <div className="mt-1 text-sm text-slate-300">{shownPhone || "—"}</div>
               </div>
 
               <div>
                 <div className="mb-2 text-xs font-medium text-slate-400">Members</div>
                 <div className="space-y-1">
-                  {memberNames.length > 0 ? memberNames.map((name) => (
+                  {shownMemberNames.length > 0 ? shownMemberNames.map((name) => (
                     <div key={name} className="rounded-lg border border-slate-800/60 bg-slate-900/20 px-3 py-1.5 text-sm text-slate-100">{name}</div>
                   )) : <div className="text-sm text-slate-500">No members listed.</div>}
                 </div>

@@ -131,7 +131,7 @@ export default function Layout() {
       {/* Footer */}
       <footer className="border-t border-slate-800/60 py-6">
         <div className="mx-auto max-w-6xl px-4 text-xs text-slate-500 md:px-8">
-          Internal project site • Maze-solving robot dashboard • Deployed frontend + API
+          Internal project site • Maze-solving robot dashboard • Frontend and API project
         </div>
       </footer>
     </div>

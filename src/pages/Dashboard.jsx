@@ -154,6 +154,7 @@ export default function Dashboard() {
 
         <div className="flex flex-wrap items-center gap-2">
           <Badge tone="slate">Runs: {stats.totalRuns}</Badge>
+          <Badge tone="blue">Teams: {teams.length}</Badge>
           <Badge tone="amber">Avg: {stats.avgRunTime == null ? "—" : `${stats.avgRunTime.toFixed(2)}s`}</Badge>
           <Badge tone="green">Best Algo: {stats.bestAlgoType || "—"}</Badge>
         </div>
